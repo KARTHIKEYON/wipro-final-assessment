@@ -1,3 +1,11 @@
+Add NETCONF4J dependency:
+<dependency>
+    <groupId>org.opendaylight</groupId>
+    <artifactId>netconf4j</artifactId>
+    <version>1.0.0</version>
+</dependency>
+
+CODE:
 import org.opendaylight.netconf.client.NetconfClient;
 import org.opendaylight.netconf.client.NetconfDevice;
 import org.opendaylight.netconf.client.NetconfClientFactory;
