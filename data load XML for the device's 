@@ -1,0 +1,28 @@
+<rpc xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="1">
+  <edit-config>
+    <target><running/></target>
+    <config>
+      <device-system xmlns="urn:example:device-system">
+        <ip-address>192.168.1.100</ip-address>
+        
+        <mux>
+          <input-channels>8</input-channels>
+          <output-channels>4</output-channels>
+          <status>up</status>
+        </mux>
+        
+        <amplifier>
+          <gain>10</gain>
+          <power>100</power>
+          <status>on</status>
+        </amplifier>
+        
+        <transducer>
+          <frequency>50000</frequency>
+          <mode>pulse</mode>
+          <status>active</status>
+        </transducer>
+      </device-system>
+    </config>
+  </edit-config>
+</rpc>
