@@ -1,0 +1,82 @@
+module device-system {
+  yang-version 1.1;
+  namespace "urn:example:device-system";
+  prefix ds;
+
+  import ietf-inet-types { prefix inet; }
+
+  organization "Example Organization";
+  contact "support@example.com";
+  description
+    "YANG model for a system consisting of a MUX, Amplifier, and Transducer with a single IP.";
+
+  revision 2025-03-25 {
+    description "Initial version of the device system model.";
+  }
+
+  container device-system {
+    description "Main container for the entire system.";
+
+    leaf ip-address {
+      type inet:ipv4-address;
+      description "Single IP address assigned to the entire system.";
+    }
+
+    container mux {
+      description "Multiplexer configuration and status.";
+      leaf input-channels {
+        type uint8;
+        description "Number of input channels.";
+      }
+      leaf output-channels {
+        type uint8;
+        description "Number of output channels.";
+      }
+      leaf status {
+        type enumeration {
+          enum up;
+          enum down;
+        }
+        description "Operational status of the MUX.";
+      }
+    }
+
+    container amplifier {
+      description "Amplifier configuration and status.";
+      leaf gain {
+        type int8;
+        description "Amplifier gain in dB.";
+      }
+      leaf power {
+        type uint16;
+        description "Amplifier power level in watts.";
+      }
+      leaf status {
+        type enumeration {
+          enum on;
+          enum off;
+        }
+        description "Power status of the amplifier.";
+      }
+    }
+
+    container transducer {
+      description "Transducer configuration and status.";
+      leaf frequency {
+        type uint32;
+        description "Operating frequency in Hz.";
+      }
+      leaf mode {
+        type string;
+        description "Current operating mode.";
+      }
+      leaf status {
+        type enumeration {
+          enum active;
+          enum inactive;
+        }
+        description "Operational status of the transducer.";
+      }
+    }
+  }
+}
