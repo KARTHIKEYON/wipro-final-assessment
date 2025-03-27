@@ -1,0 +1,240 @@
+package com.nms.client.controller;
+
+import com.nms.client.service.NbiService;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/nbi")
+public class NbiController {
+
+    private final NbiService nbiService;
+
+    public NbiController(NbiService nbiService) {
+        this.nbiService = nbiService;
+    }
+
+    @GetMapping("/mapped-data")
+    public String getMappedPerformanceData() {
+        return nbiService.fetchAndMapPerformanceData();
+    }
+
+    @GetMapping("/mapped-data-between")
+    public String getMappedPerformanceDataBetween(
+            @RequestParam String from, @RequestParam String to) {
+        return nbiService.fetchPerformanceDataBetween(from, to);
+    }
+}
+
+
+/////
+
+package com.nms.client.model;
+
+import java.util.List;
+
+public class NbiPerformanceData {
+
+    private String networkElementId;  // NE ID mapped from PerformanceData
+    private String port;
+    private String measurementUnit;
+    private String timeStamp;
+    private String trafficDirection;
+    private String siteLocation;
+    private String details;
+    private List<NbiKpi> kpis;  // Mapped KPIs
+
+    // Getters and Setters
+    public String getNetworkElementId() {
+        return networkElementId;
+    }
+
+    public void setNetworkElementId(String networkElementId) {
+        this.networkElementId = networkElementId;
+    }
+
+    public String getPort() {
+        return port;
+    }
+
+    public void setPort(String port) {
+        this.port = port;
+    }
+
+    public String getMeasurementUnit() {
+        return measurementUnit;
+    }
+
+    public void setMeasurementUnit(String measurementUnit) {
+        this.measurementUnit = measurementUnit;
+    }
+
+    public String getTimeStamp() {
+        return timeStamp;
+    }
+
+    public void setTimeStamp(String timeStamp) {
+        this.timeStamp = timeStamp;
+    }
+
+    public String getTrafficDirection() {
+        return trafficDirection;
+    }
+
+    public void setTrafficDirection(String trafficDirection) {
+        this.trafficDirection = trafficDirection;
+    }
+
+    public String getSiteLocation() {
+        return siteLocation;
+    }
+
+    public void setSiteLocation(String siteLocation) {
+        this.siteLocation = siteLocation;
+    }
+
+    public String getDetails() {
+        return details;
+    }
+
+    public void setDetails(String details) {
+        this.details = details;
+    }
+
+    public List<NbiKpi> getKpis() {
+        return kpis;
+    }
+
+    public void setKpis(List<NbiKpi> kpis) {
+        this.kpis = kpis;
+    }
+
+    // Inner class for KPI mapping
+    public static class NbiKpi {
+        private String metricName;
+        private double metricValue;
+
+        // Getters and Setters
+        public String getMetricName() {
+            return metricName;
+        }
+
+        public void setMetricName(String metricName) {
+            this.metricName = metricName;
+        }
+
+        public double getMetricValue() {
+            return metricValue;
+        }
+
+        public void setMetricValue(double metricValue) {
+            this.metricValue = metricValue;
+        }
+    }
+}
+
+
+
+/////
+
+
+package com.nms.client.service;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+@Service
+public class NbiService {
+
+    @Value("${performance.api.data}")
+    private String performanceApiUrl;
+
+    @Value("${performance.api.dataBetween}")
+    private String performanceApiDataBetweenUrl;
+
+    private final RestTemplate restTemplate = new RestTemplate();
+
+    public String fetchAndMapPerformanceData() {
+        return restTemplate.getForObject(performanceApiUrl, String.class);
+    }
+
+    public String fetchPerformanceDataBetween(String from, String to) {
+        String url = performanceApiDataBetweenUrl + "?from=" + from + "&to=" + to;
+        return restTemplate.getForObject(url, String.class);
+    }
+}
+
+
+///
+
+package com.nms.client.util;
+
+import com.nms.client.model.NbiPerformanceData;
+import com.nms.server.model.PerformanceData;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class NbiMapper {
+
+    public static NbiPerformanceData mapToNbi(PerformanceData data) {
+        NbiPerformanceData nbiData = new NbiPerformanceData();
+        nbiData.setNetworkElementId(data.getNeId());
+        nbiData.setPort(data.getPortName());
+        nbiData.setMeasurementUnit(data.getUnit());
+        nbiData.setTimeStamp(data.getTimestamp());
+        nbiData.setTrafficDirection(data.getDirection());
+        nbiData.setSiteLocation(data.getLocation());
+        nbiData.setDetails(data.getDescription());
+
+        // Map KPI list
+        List<NbiPerformanceData.NbiKpi> nbiKpis = data.getKpis().stream().map(kpi -> {
+            NbiPerformanceData.NbiKpi nbiKpi = new NbiPerformanceData.NbiKpi();
+            nbiKpi.setMetricName(kpi.getMonName());
+            nbiKpi.setMetricValue(kpi.getValue());
+            return nbiKpi;
+        }).collect(Collectors.toList());
+
+        nbiData.setKpis(nbiKpis);
+        return nbiData;
+    }
+}
+
+
+////
+
+
+package com.nms.client.util;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Map;
+
+public class JsonToPropertiesConverter {
+
+    public static void convertJsonToProperties(String json, String outputFilePath) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            Map<String, String> apiEndpoints = objectMapper.readValue(json, Map.class);
+
+            FileWriter writer = new FileWriter(outputFilePath);
+            for (Map.Entry<String, String> entry : apiEndpoints.entrySet()) {
+                writer.write(entry.getKey() + "=" + entry.getValue() + "\n");
+            }
+            writer.close();
+            System.out.println("Properties file generated: " + outputFilePath);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void main(String[] args) {
+        // Sample JSON (this should be fetched from /performance/api-spec in a real scenario)
+        String apiSpecJson = "{ \"performance.api.data\": \"http://localhost:8080/performance/data\", \"performance.api.spec\": \"http://localhost:8080/performance/api-spec\" }";
+
+        // Convert JSON to properties file
+        convertJsonToProperties(apiSpecJson, "src/main/resources/api_endpoints.properties");
+    }
+}
