@@ -1,4 +1,4 @@
-package com.nms.server.controller;
+8package com.nms.server.controller;
 
 import com.nms.server.model.PerformanceData;
 import com.nms.server.service.PerformanceService;
@@ -267,3 +267,25 @@ public class PerformanceService {
         return data;
     }
 }
+
+////
+  
+public String getApiSpecification() {
+        return """
+        {
+            "endpoints": [
+                {
+                    "method": "GET",
+                    "url": "/performance/data",
+                    "description": "Fetch all performance data"
+                },
+                {
+                    "method": "GET",
+                    "url": "/performance/data-between",
+                    "params": ["from", "to"],
+                    "description": "Fetch performance data between timestamps"
+                }
+            ]
+        }
+        """;
+    }
