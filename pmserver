@@ -206,3 +206,64 @@ public class ApiSpecificationGenerator {
         }
     }
 }
+
+
+
+//))///
+
+package com.nms.server.service;
+
+import com.nms.server.model.PerformanceData;
+import org.springframework.stereotype.Service;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+public class PerformanceService {
+
+    private final List<PerformanceData> performanceDataList = List.of(
+            createSampleData("2025-03-27T12:00:00Z"),
+            createSampleData("2025-03-27T13:30:00Z"),
+            createSampleData("2025-03-27T15:00:00Z")
+    );
+
+    public List<PerformanceData> getPerformanceData() {
+        return performanceDataList;
+    }
+
+    public List<PerformanceData> getPerformanceDataBetween(String from, String to) {
+        Instant fromTime = Instant.parse(from);
+        Instant toTime = Instant.parse(to);
+
+        return performanceDataList.stream()
+                .filter(data -> {
+                    Instant dataTime = Instant.parse(data.getTimestamp());
+                    return dataTime.isAfter(fromTime) && dataTime.isBefore(toTime);
+                })
+                .collect(Collectors.toList());
+    }
+
+    private static PerformanceData createSampleData(String timestamp) {
+        PerformanceData.Kpi kpi1 = new PerformanceData.Kpi();
+        kpi1.setMonName("Throughput");
+        kpi1.setValue(500.25);
+
+        PerformanceData.Kpi kpi2 = new PerformanceData.Kpi();
+        kpi2.setMonName("Latency");
+        kpi2.setValue(30.5);
+
+        PerformanceData data = new PerformanceData();
+        data.setPortName("PORT-1-1-IN");
+        data.setUnit("Mbps");
+        data.setTimestamp(timestamp);
+        data.setDirection("Ingress");
+        data.setLocation("Site A");
+        data.setDescription("Performance Data Sample");
+        data.setNeId("NE-1234");
+        data.setKpis(List.of(kpi1, kpi2));
+
+        return data;
+    }
+}
