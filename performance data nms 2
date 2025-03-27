@@ -99,3 +99,223 @@ public class PerformanceData {
         this.kpis = kpis;
     }
 }
+
+//////////////////
+
+package com.nms.server.controller;
+
+import com.nms.server.model.PerformanceData;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/performance")
+public class PerformanceController {
+
+    @GetMapping("/data")
+    public PerformanceData getPerformanceData() {
+        PerformanceData data = new PerformanceData();
+        data.setPortName("PORT-1-1-C1");
+        data.setUnit("count");
+        data.setTimestamp("2025-03-12T02:47:00");
+        data.setDirection("transmit");
+        data.setLocation("NEND");
+        data.setDescription("Generated data for PORT-1-1-C1");
+        data.setNeId("NE-1234");
+
+        PerformanceData.KPI kpi1 = new PerformanceData.KPI();
+        kpi1.setMonName("OPIN");
+        kpi1.setValue(2.14);
+
+        PerformanceData.KPI kpi2 = new PerformanceData.KPI();
+        kpi2.setMonName("OPIN-H");
+        kpi2.setValue(4.54);
+
+        data.setKpis(List.of(kpi1, kpi2));
+
+        return data;
+    }
+}
+
+
+////////////
+
+package com.nms.client.model;
+
+import java.util.List;
+
+public class NBIPerformanceData {
+    private String resource;
+    private String unit;
+    private String timestamp;
+    private String direction;
+    private String location;
+    private String description;
+    private String neId;
+    private List<KPI> kpis;
+
+    public static class KPI {
+        private String monName;
+        private double value;
+
+        // Getters and Setters
+        public String getMonName() {
+            return monName;
+        }
+
+        public void setMonName(String monName) {
+            this.monName = monName;
+        }
+
+        public double getValue() {
+            return value;
+        }
+
+        public void setValue(double value) {
+            this.value = value;
+        }
+    }
+
+    // Getters and Setters
+    public String getResource() {
+        return resource;
+    }
+
+    public void setResource(String resource) {
+        this.resource = resource;
+    }
+
+    public String getUnit() {
+        return unit;
+    }
+
+    public void setUnit(String unit) {
+        this.unit = unit;
+    }
+
+    public String getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(String timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public String getDirection() {
+        return direction;
+    }
+
+    public void setDirection(String direction) {
+        this.direction = direction;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getNeId() {
+        return neId;
+    }
+
+    public void setNeId(String neId) {
+        this.neId = neId;
+    }
+
+    public List<KPI> getKpis() {
+        return kpis;
+    }
+
+    public void setKpis(List<KPI> kpis) {
+        this.kpis = kpis;
+    }
+}
+
+
+
+////////////////
+
+
+package com.nms.client.mapper;
+
+import com.nms.client.model.NBIPerformanceData;
+import com.nms.server.model.PerformanceData;
+
+import java.util.stream.Collectors;
+
+public class PerformanceDataMapper {
+    public static NBIPerformanceData mapToNBIFormat(PerformanceData data) {
+        NBIPerformanceData nbiData = new NBIPerformanceData();
+        nbiData.setResource(data.getPortName());
+        nbiData.setUnit(data.getUnit());
+        nbiData.setTimestamp(data.getTimestamp());
+        nbiData.setDirection(data.getDirection());
+        nbiData.setLocation(data.getLocation());
+        nbiData.setDescription(data.getDescription());
+        nbiData.setNeId(data.getNeId());
+
+        if (data.getKpis() != null) {
+            nbiData.setKpis(data.getKpis().stream().map(kpi -> {
+                NBIPerformanceData.KPI nbiKpi = new NBIPerformanceData.KPI();
+                nbiKpi.setMonName(kpi.getMonName());
+                nbiKpi.setValue(kpi.getValue());
+                return nbiKpi;
+            }).collect(Collectors.toList()));
+        }
+
+        return nbiData;
+    }
+}
+
+
+
+////////////// 
+
+
+
+package com.nms.client.controller;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nms.client.mapper.PerformanceDataMapper;
+import com.nms.client.model.NBIPerformanceData;
+import com.nms.server.model.PerformanceData;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
+
+@RestController
+@RequestMapping("/performance")
+public class PerformanceClientController {
+
+    private final RestTemplate restTemplate = new RestTemplate();
+    private final String SERVER_URL = "http://localhost:8080/performance/data";
+
+    @PostMapping("/convert")
+    public String convertAndSend() {
+        try {
+            PerformanceData data = restTemplate.getForObject(SERVER_URL, PerformanceData.class);
+            if (data == null) return "No data received from server";
+
+            NBIPerformanceData nbiData = PerformanceDataMapper.mapToNBIFormat(data);
+            ObjectMapper objectMapper = new ObjectMapper();
+            String json = objectMapper.writeValueAsString(nbiData);
+
+            System.out.println("Mapped JSON for NBI: " + json);
+            return json;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Error converting data to JSON";
+        }
+    }
+}
