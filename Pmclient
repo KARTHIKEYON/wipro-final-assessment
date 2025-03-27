@@ -238,3 +238,10 @@ public class JsonToPropertiesConverter {
         convertJsonToProperties(apiSpecJson, "src/main/resources/api_endpoints.properties");
     }
 }
+
+
+
+/////
+performance.api.data=http://localhost:8080/performance/data
+performance.api.dataBetween=http://localhost:8080/performance/data-between
+performance.api.spec=http://localhost:8080/performance/api-spec
