@@ -1,0 +1,208 @@
+package com.nms.server.controller;
+
+import com.nms.server.model.PerformanceData;
+import com.nms.server.service.PerformanceService;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/performance")
+public class PerformanceController {
+
+    private final PerformanceService performanceService;
+
+    public PerformanceController(PerformanceService performanceService) {
+        this.performanceService = performanceService;
+    }
+
+    // ✅ Fetch all performance data
+    @GetMapping("/data")
+    public List<PerformanceData> getAllPerformanceData() {
+        return performanceService.getPerformanceData();
+    }
+
+    // ✅ Fetch performance data within a time range
+    @GetMapping("/data-between")
+    public List<PerformanceData> getPerformanceBetweenTimestamps(
+            @RequestParam String from,
+            @RequestParam String to) {
+        return performanceService.getPerformanceDataBetween(from, to);
+    }
+
+    // ✅ API Specification JSON
+    @GetMapping("/api-spec")
+    public String getApiSpecification() {
+        return performanceService.getApiSpecification();
+    }
+}
+
+//////
+
+
+package com.nms.server.model;
+
+import java.util.List;
+
+public class PerformanceData {
+
+    private String portName;
+    private String unit;
+    private String timestamp;
+    private String direction;
+    private String location;
+    private String description;
+    private String neId;  // ✅ New field for Network Element ID
+    private List<Kpi> kpis;  // ✅ New field for KPIs
+
+    // Getters and Setters
+    public String getPortName() {
+        return portName;
+    }
+
+    public void setPortName(String portName) {
+        this.portName = portName;
+    }
+
+    public String getUnit() {
+        return unit;
+    }
+
+    public void setUnit(String unit) {
+        this.unit = unit;
+    }
+
+    public String getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(String timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public String getDirection() {
+        return direction;
+    }
+
+    public void setDirection(String direction) {
+        this.direction = direction;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getNeId() {
+        return neId;
+    }
+
+    public void setNeId(String neId) {
+        this.neId = neId;
+    }
+
+    public List<Kpi> getKpis() {
+        return kpis;
+    }
+
+    public void setKpis(List<Kpi> kpis) {
+        this.kpis = kpis;
+    }
+
+    // Inner class for KPI (Key Performance Indicator)
+    public static class Kpi {
+        private String monName;
+        private double value;
+
+        // Getters and Setters
+        public String getMonName() {
+            return monName;
+        }
+
+        public void setMonName(String monName) {
+            this.monName = monName;
+        }
+
+        public double getValue() {
+            return value;
+        }
+
+        public void setValue(double value) {
+            this.value = value;
+        }
+    }
+}
+
+
+
+///////
+
+package com.nms.server.service;
+
+import com.nms.server.model.PerformanceData;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class PerformanceService {
+
+    public List<PerformanceData> getPerformanceData() {
+        // Mocking sample performance data
+        PerformanceData.Kpi kpi1 = new PerformanceData.Kpi();
+        kpi1.setMonName("Throughput");
+        kpi1.setValue(500.25);
+
+        PerformanceData.Kpi kpi2 = new PerformanceData.Kpi();
+        kpi2.setMonName("Latency");
+        kpi2.setValue(30.5);
+
+        PerformanceData data1 = new PerformanceData();
+        data1.setPortName("PORT-1-1-IN");
+        data1.setUnit("Mbps");
+        data1.setTimestamp("2025-03-27T12:00:00Z");
+        data1.setDirection("Ingress");
+        data1.setLocation("Site A");
+        data1.setDescription("Performance Data Sample 1");
+        data1.setNeId("NE-1234");  // New field
+        data1.setKpis(List.of(kpi1, kpi2)); // New field
+
+        return List.of(data1);
+    }
+}
+
+
+
+
+////
+
+package com.nms.server.util;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Map;
+
+public class ApiSpecificationGenerator {
+    public static String generateApiSpec() {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            Map<String, String> apiEndpoints = Map.of(
+                "getPerformanceData", "/performance/data"
+            );
+            return objectMapper.writeValueAsString(apiEndpoints);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "{}";
+        }
+    }
+}
