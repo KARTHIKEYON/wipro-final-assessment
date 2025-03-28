@@ -245,3 +245,64 @@ public class JsonToPropertiesConverter {
 performance.api.data=http://localhost:8080/performance/data
 performance.api.dataBetween=http://localhost:8080/performance/data-between
 performance.api.spec=http://localhost:8080/performance/api-spec
+
+
+
+
+package com.nms.client.service;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+@Service
+public class NbiService {
+
+    @Value("${performance.api.data}")
+    private String performanceApiUrl;
+
+    @Value("${performance.api.dataBetween}")
+    private String performanceApiDataBetweenUrl;
+
+    private final RestTemplate restTemplate;
+
+    public NbiService(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate; // Inject RestTemplate from Spring
+    }
+
+    public String fetchAndMapPerformanceData() {
+        String response = restTemplate.getForObject(performanceApiUrl, String.class);
+        return mapToNbiFormat(response);
+    }
+
+    public String fetchPerformanceDataBetween(String from, String to) {
+        String url = performanceApiDataBetweenUrl + "?from=" + from + "&to=" + to;
+        String response = restTemplate.getForObject(url, String.class);
+        return mapToNbiFormat(response);
+    }
+
+    private String mapToNbiFormat(String serverData) {
+        // Implement mapping logic to transform Server JSON to NBI JSON
+        return serverData; // Replace with actual mapping
+    }
+}
+
+
+//))//////
+
+
+
+package com.nms.client.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestTemplate;
+
+@Configuration
+public class RestTemplateConfig {
+
+    @Bean
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
+    }
+}
