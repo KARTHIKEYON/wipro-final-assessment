@@ -306,3 +306,55 @@ public class RestTemplateConfig {
         return new RestTemplate();
     }
 }
+
+
+////
+
+
+package com.nms.client.controller;
+
+import com.nms.client.service.NbiService;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/nbi")
+public class NbiController {
+
+    private final NbiService nbiService;
+
+    public NbiController(NbiService nbiService) {
+        this.nbiService = nbiService;
+    }
+
+    // ✅ Fetch all mapped performance data
+    @GetMapping("/mapped-data")
+    public String getMappedPerformanceData() {
+        System.out.println("Inside /mapped-data endpoint");
+        String result = nbiService.fetchAndMapPerformanceData();
+        
+        if (result == null) {
+            System.out.println("No mapped data found!");
+            return "No Data Available";
+        }
+        
+        return result;
+    }
+
+    // ✅ Fetch mapped performance data within a time range
+    @GetMapping("/mapped-data-between")
+    public String getMappedPerformanceDataBetween(
+        @RequestParam String from, 
+        @RequestParam String to) {
+        
+        System.out.println("Fetching mapped performance data from " + from + " to " + to);
+        
+        String result = nbiService.fetchPerformanceDataBetween(from, to);
+        
+        if (result == null) {
+            System.out.println("No data found for the given range!");
+            return "No Data Available";
+        }
+        
+        return result;
+    }
+}
