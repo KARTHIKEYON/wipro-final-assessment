@@ -437,3 +437,15 @@ List<Kpi> filteredKpis = data.getKpis().stream()
         })
         .filter(Objects::nonNull)
         .collect(Collectors.toList());
+
+////
+
+List<Kpi> filteredKpis = data.getKpis().stream()
+                .filter(kpi -> montype == null || montype.isEmpty() || kpi.getMonName().equalsIgnoreCase(montype))
+                .collect(Collectors.toList());
+            filteredData.setKpis(filteredKpis);
+
+            return filteredData;
+        })
+        .collect(Collectors.toList());
+}
