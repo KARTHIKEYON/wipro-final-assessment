@@ -402,3 +402,20 @@ public class NbiService {
         }
     }
 }
+
+/////
+public List<PerformanceData> getPerformanceDataByTimestampAndPort(String from, String to, String portName) {
+    List<PerformanceData> allData = getAllPerformanceData();
+
+    return allData.stream()
+        .filter(data -> {
+            boolean timestampMatch = data.getTimestamp().compareTo(from) >= 0 &&
+                                     data.getTimestamp().compareTo(to) <= 0;
+
+            boolean portMatch = (portName == null || portName.isEmpty()) ||
+                                data.getPortName().equalsIgnoreCase(portName);
+
+            return timestampMatch && portMatch;
+        })
+        .collect(Collectors.toList());
+}
