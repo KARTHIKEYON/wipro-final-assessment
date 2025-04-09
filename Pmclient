@@ -449,3 +449,18 @@ List<Kpi> filteredKpis = data.getKpis().stream()
         })
         .collect(Collectors.toList());
 }
+
+
+///
+
+
+.map(data -> {
+            // If montype is given, filter KPI list to include only matching KPI
+            if (montype != null && !montype.isEmpty()) {
+                List<Kpi> filteredKpis = data.getKpis().stream()
+                        .filter(kpi -> kpi.getMonName().equalsIgnoreCase(montype))
+                        .collect(Collectors.toList());
+                data.setKpis(filteredKpis);
+            }
+            return data;
+        })
