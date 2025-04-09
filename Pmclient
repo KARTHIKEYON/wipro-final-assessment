@@ -419,3 +419,21 @@ public List<PerformanceData> getPerformanceDataByTimestampAndPort(String from, S
         })
         .collect(Collectors.toList());
 }
+
+
+///
+
+List<Kpi> filteredKpis = data.getKpis().stream()
+                .filter(kpi -> montype == null || montype.isEmpty() || kpi.getMonName().toLowerCase().contains(montype.toLowerCase()))
+                .collect(Collectors.toList());
+
+            // Only return if at least one KPI matched
+            if (!filteredKpis.isEmpty()) {
+                data.setKpis(filteredKpis);
+                return data;
+            } else {
+                return null;
+            }
+        })
+        .filter(Objects::nonNull)
+        .collect(Collectors.toList());
