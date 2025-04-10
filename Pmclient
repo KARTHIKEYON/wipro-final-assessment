@@ -464,3 +464,11 @@ List<Kpi> filteredKpis = data.getKpis().stream()
             }
             return data;
         })
+
+
+
+///
+if (from == null || to == null || portname == null || neId == null ||
+        from.isEmpty() || to.isEmpty() || portname.isEmpty() || neId.isEmpty()) {
+        return Collections.emptyList(); // or throw IllegalArgumentException
+    }
