@@ -472,3 +472,177 @@ if (from == null || to == null || portname == null || neId == null ||
         from.isEmpty() || to.isEmpty() || portname.isEmpty() || neId.isEmpty()) {
         return Collections.emptyList(); // or throw IllegalArgumentException
     }
+
+
+////
+
+import java.util.List;
+
+public class TapiPerformanceData {
+    private String nodeUuid;
+    private String nodeEdgePointUuid;
+    private String timeStamp;
+    private MeasurementUnit measurementUnit;
+    private TrafficDirection trafficDirection;
+    private SiteLocation siteLocation;
+    private DataDescription dataDescription;
+    private List<PerformanceValue> performanceValueList;
+
+    // Getters and Setters
+    public String getNodeUuid() {
+        return nodeUuid;
+    }
+
+    public void setNodeUuid(String nodeUuid) {
+        this.nodeUuid = nodeUuid;
+    }
+
+    public String getNodeEdgePointUuid() {
+        return nodeEdgePointUuid;
+    }
+
+    public void setNodeEdgePointUuid(String nodeEdgePointUuid) {
+        this.nodeEdgePointUuid = nodeEdgePointUuid;
+    }
+
+    public String getTimeStamp() {
+        return timeStamp;
+    }
+
+    public void setTimeStamp(String timeStamp) {
+        this.timeStamp = timeStamp;
+    }
+
+    public MeasurementUnit getMeasurementUnit() {
+        return measurementUnit;
+    }
+
+    public void setMeasurementUnit(MeasurementUnit measurementUnit) {
+        this.measurementUnit = measurementUnit;
+    }
+
+    public TrafficDirection getTrafficDirection() {
+        return trafficDirection;
+    }
+
+    public void setTrafficDirection(TrafficDirection trafficDirection) {
+        this.trafficDirection = trafficDirection;
+    }
+
+    public SiteLocation getSiteLocation() {
+        return siteLocation;
+    }
+
+    public void setSiteLocation(SiteLocation siteLocation) {
+        this.siteLocation = siteLocation;
+    }
+
+    public DataDescription getDataDescription() {
+        return dataDescription;
+    }
+
+    public void setDataDescription(DataDescription dataDescription) {
+        this.dataDescription = dataDescription;
+    }
+
+    public List<PerformanceValue> getPerformanceValueList() {
+        return performanceValueList;
+    }
+
+//
+
+Tapi performance response:
+
+import java.util.List;
+
+public class TapiPerformanceResponse {
+    private List<TapiPerformanceData> performanceDataList;
+
+    public TapiPerformanceResponse(List<TapiPerformanceData> performanceDataList) {
+        this.performanceDataList = performanceDataList;
+    }
+
+    public List<TapiPerformanceData> getPerformanceDataList() {
+        return performanceDataList;
+    }
+
+    public void setPerformanceDataList(List<TapiPerformanceData> performanceDataList) {
+        this.performanceDataList = performanceDataList;
+    }
+}
+
+
+
+////
+TapiMapper:
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class TapiMapper {
+
+    public static TapiPerformanceData map(NbiPerformanceData nbiData) {
+        TapiPerformanceData tapi = new TapiPerformanceData();
+
+        tapi.setNodeUuid(nbiData.getNeId());
+        tapi.setNodeEdgePointUuid(nbiData.getPortName()); // or getResourceName()
+
+        tapi.setTimeStamp(nbiData.getTimeStamp());
+
+        TapiPerformanceData.MeasurementUnit mu = new TapiPerformanceData.MeasurementUnit();
+        mu.setUnit(nbiData.getUnit());
+        tapi.setMeasurementUnit(mu);
+
+        TapiPerformanceData.TrafficDirection td = new TapiPerformanceData.TrafficDirection();
+        td.setDirection(nbiData.getDirection());
+        tapi.setTrafficDirection(td);
+
+        TapiPerformanceData.SiteLocation sl = new TapiPerformanceData.SiteLocation();
+        sl.setLocation(nbiData.getLocation());
+        tapi.setSiteLocation(sl);
+
+        TapiPerformanceData.DataDescription dd = new TapiPerformanceData.DataDescription();
+        dd.setDescription(nbiData.getDescription());
+        tapi.setDataDescription(dd);
+
+        List<TapiPerformanceData.PerformanceValue> perfList = new ArrayList<>();
+        for (Kpi kpi : nbiData.getKpis()) {
+            TapiPerformanceData.PerformanceValue pv = new TapiPerformanceData.PerformanceValue();
+            pv.setMetricName(kpi.getMonName());
+            pv.setMetricValue(kpi.getValue());
+            perfList.add(pv);
+        }
+
+        tapi.setPerformanceValueList(perfList);
+        return tapi;
+    }
+
+    public static List<TapiPerformanceData> mapAll(List<NbiPerformanceData> nbiList) {
+        return nbiList.stream().map(TapiMapper::map).collect(Collectors.toList());
+    }
+}
+
+
+Tapi controller:
+
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/tapi/performance")
+public class PerformanceController {
+
+    @Autowired
+    private NbiService nbiService;
+
+    @GetMapping("/getAllPerformanceData")
+    public TapiPerformanceResponse getAllPerformanceData() {
+        List<NbiPerformanceData> rawData = nbiService.getAllPerformanceData();
+        List<TapiPerformanceData> mapped = TapiMapper.mapAll(rawData);
+        return new TapiPerformanceResponse(mapped);
+    }
+}
